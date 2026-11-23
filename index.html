@@ -1,0 +1,809 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Графит автосервис</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: full-bleed dark bands, content in a 1200px column; one orange light source per section */
+:root {
+  --bg: #0E0E10;
+  --bg-2: #141417;
+  --surface: rgba(255,255,255,0.045);
+  --line: rgba(255,255,255,0.09);
+  --fg: #F2F0EE;
+  --muted: #9A9794;
+  --accent: #FF5A1F;
+  --accent-soft: rgba(255,90,31,0.16);
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; overflow-x: clip; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-weight: 300; font-size: 16px; line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--bg); }
+h1, h2, h3, .display { font-family: var(--font-display); text-wrap: balance; letter-spacing: -0.02em; }
+.wrap { max-width: 1200px; margin-inline: auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
+.muted { color: var(--muted); }
+.tnum { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+/* header */
+.site-header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; transition: background .3s, border-color .3s; border-bottom: 1px solid transparent; }
+.site-header.scrolled { background: rgba(14,14,16,0.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-color: var(--line); }
+
+/* buttons */
+.btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 52px; padding: 0 26px; border-radius: 999px; font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: 0.01em; cursor: pointer; transition: transform .2s ease, box-shadow .25s ease, background .25s; white-space: nowrap; border: 0; }
+.btn-primary { background: var(--accent); color: #140700; box-shadow: 0 8px 30px -8px rgba(255,90,31,.7); }
+.btn-primary:hover { box-shadow: 0 10px 44px -6px rgba(255,90,31,.95); }
+.btn-ghost { background: rgba(255,255,255,0.06); color: var(--fg); border: 1px solid rgba(255,255,255,0.16); }
+.btn-ghost:hover { background: rgba(255,255,255,0.11); }
+.btn .arrow { transition: transform .25s ease; }
+.btn:hover .arrow { transform: translateX(4px); }
+
+/* glass */
+.glass { background: linear-gradient(160deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%); box-shadow: 0 20px 60px -20px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.08); }
+
+/* hero */
+.hero { position: relative; min-height: 100svh; display: flex; align-items: flex-end; overflow: hidden; isolation: isolate; }
+.hero-scene { position: absolute; inset: -6% 0 0 0; z-index: -2; }
+.hero-scene svg { width: 100%; height: 100%; display: block; }
+.hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(14,14,16,.55) 0%, rgba(14,14,16,0) 30%, rgba(14,14,16,.2) 60%, var(--bg) 100%), linear-gradient(90deg, rgba(14,14,16,.85) 0%, rgba(14,14,16,.2) 55%, rgba(14,14,16,0) 100%); }
+.hero h1 { font-size: clamp(42px, 7.4vw, 104px); line-height: .95; font-weight: 700; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+@media (max-width: 767px) {
+  .hero { display: block; min-height: 0; }
+  .hero-scene { inset: 0 0 auto 0; height: 330px; }
+  .hero-content { padding-block: 290px 56px !important; }
+  .hero::after { background: linear-gradient(180deg, rgba(14,14,16,.5) 0%, rgba(14,14,16,0) 22%, rgba(14,14,16,0) 55%, var(--bg) 82%); }
+}
+.spec { font-family: var(--font-display); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.spec b { color: var(--fg); font-weight: 600; }
+
+/* brand strip */
+.marquee { mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+.marquee-track { display: flex; gap: 64px; width: max-content; animation: marquee 38s linear infinite; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: .12em; text-transform: uppercase; color: rgba(242,240,238,.28); transition: color .25s, text-shadow .25s; white-space: nowrap; cursor: default; }
+.brand:hover { color: var(--fg); text-shadow: 0 0 22px rgba(255,90,31,.85); }
+
+/* service cards */
+.svc { position: relative; border-radius: 22px; padding: 28px; transition: box-shadow .35s ease, border-color .35s ease; }
+.svc:hover { border-color: rgba(255,90,31,.55); box-shadow: 0 24px 60px -24px rgba(255,90,31,.55), 0 0 0 1px rgba(255,90,31,.25), inset 0 1px 0 rgba(255,255,255,.1); }
+.svc .ico { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); transition: background .3s, color .3s, box-shadow .3s; }
+.svc:hover .ico { background: var(--accent); color: #140700; box-shadow: 0 0 30px rgba(255,90,31,.6); }
+
+/* stats */
+.stat-num { font-family: var(--font-display); font-weight: 700; font-size: clamp(52px, 7vw, 88px); line-height: 1; letter-spacing: -0.04em; }
+.stat-num sup { font-size: .42em; color: var(--accent); vertical-align: top; position: relative; top: .25em; margin-left: 4px; }
+
+/* gallery */
+.masonry { columns: 1; column-gap: 18px; }
+@media (min-width: 640px) { .masonry { columns: 2; } }
+@media (min-width: 1024px) { .masonry { columns: 3; } }
+.ba { position: relative; break-inside: avoid; margin-bottom: 18px; border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: var(--bg-2); max-width: 100%; }
+.ba-layer { position: absolute; inset: 0; }
+.ba-layer svg { width: 100%; height: 100%; display: block; }
+.ba-before { clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
+.ba-handle { position: absolute; top: 0; bottom: 0; left: var(--pos); width: 2px; background: var(--fg); transform: translateX(-1px); pointer-events: none; box-shadow: 0 0 18px rgba(255,90,31,.8); }
+.ba-handle::after { content: "⟷"; position: absolute; top: 50%; left: 50%; width: 40px; height: 40px; transform: translate(-50%,-50%); border-radius: 50%; background: var(--accent); color: #140700; display: grid; place-items: center; font-size: 18px; font-weight: 700; }
+.ba input[type=range] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; margin: 0; }
+.ba-tag { position: absolute; top: 14px; padding: 4px 10px; border-radius: 999px; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; background: rgba(14,14,16,.7); backdrop-filter: blur(6px); pointer-events: none; }
+.ba-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 18px 16px; background: linear-gradient(transparent, rgba(10,10,12,.92)); pointer-events: none; }
+
+/* reviews */
+.review-card { border-radius: 24px; padding: clamp(24px, 4vw, 44px); }
+.dot { width: 8px; height: 8px; border-radius: 99px; background: rgba(255,255,255,.2); transition: width .3s, background .3s; border: 0; padding: 0; cursor: pointer; }
+.dot.on { width: 28px; background: var(--accent); }
+.round-btn { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.04); color: var(--fg); cursor: pointer; transition: background .2s, border-color .2s, transform .2s; }
+.round-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+/* form */
+.field label { display: block; font-size: 12px; font-family: var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.field input, .field select { width: 100%; height: 54px; padding: 0 2px; background: transparent; color: var(--fg); border: 0; border-bottom: 1px solid rgba(255,255,255,.18); font: 400 17px var(--font-body); border-radius: 0; transition: border-color .2s; }
+.field select option { background: #1a1a1d; color: var(--fg); }
+.field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+.field input::placeholder { color: rgba(242,240,238,.3); }
+.field input[type=date]::-webkit-calendar-picker-indicator { filter: invert(.8); cursor: pointer; }
+.chip { height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); background: transparent; color: var(--fg); font: 500 14px var(--font-body); cursor: pointer; transition: all .2s; }
+.chip:hover { border-color: rgba(255,90,31,.6); }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #140700; }
+.err { color: #ff8a65; font-size: 13px; margin-top: 6px; }
+
+/* map */
+.map { position: relative; border-radius: 22px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 16 / 10; max-width: 100%; background: #111114; }
+.map svg { width: 100%; height: 100%; display: block; }
+.pin-pulse { animation: pulse 2.2s ease-out infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes pulse { 0% { transform: scale(.4); opacity: .9; } 100% { transform: scale(2.6); opacity: 0; } }
+
+.demo-note { font-size: 12px; color: var(--muted); }
+.copy-btn { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; background: transparent; cursor: pointer; }
+.copy-btn:hover { color: var(--fg); border-color: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track, .pin-pulse { animation: none; }
+  html { scroll-behavior: auto; }
+}
+</style>
+
+<div id="root"></div>
+
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+  tailwind.config = { corePlugins: { preflight: false }, theme: { extend: { colors: { accent: '#FF5A1F', ink: '#0E0E10' } } } };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js"></script>
+<script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
+<script>
+(function () {
+const { useState, useEffect, useRef, useMemo } = React;
+const { motion, AnimatePresence, useScroll, useTransform, useInView, animate, useReducedMotion } = Motion;
+const html = htm.bind(React.createElement);
+
+/* Все факты о бизнесе — здесь. Это демо-значения: перед запуском замените их данными из карточки на картах. */
+const SITE = {
+  name: "Графит",
+  city: "Гомель",
+  address: "ул. Примерная, 1",
+  phone: "+375 (29) 000-00-00",
+  phoneHref: "+375290000000",
+  hours: [["Пн–Пт", "08:00–20:00"], ["Сб", "09:00–18:00"], ["Вс", "выходной"]],
+  rating: "4.9",
+  clients: 5000,
+  years: 12,
+  masters: 18,
+  warrantyMonths: 12,
+  bays: 6,
+  mapUrl: "https://yandex.by/maps/?text=" + encodeURIComponent("автосервис Гомель"),
+};
+
+const BRANDS = ["BMW", "Audi", "Mercedes-Benz", "Porsche", "Volkswagen", "Lexus", "Volvo", "Land Rover", "Toyota", "Škoda"];
+
+const I = {
+  gauge: '<path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4.5-5"/><path d="M7.5 13.5l.8.6M12 8v1M16.5 13.5l-.8.6"/>',
+  drop: '<path d="M12 3.5c3.2 4.2 6 7.2 6 10.8a6 6 0 0 1-12 0c0-3.6 2.8-6.6 6-10.8z"/><path d="M9.5 15a2.5 2.5 0 0 0 2.5 2.5"/>',
+  spring: '<path d="M7 3h10M7 21h10"/><path d="M8 6l8 2-8 2 8 2-8 2 8 2-8 2"/>',
+  disc: '<circle cx="11" cy="13" r="8"/><circle cx="11" cy="13" r="2.6"/><path d="M15.5 3.6A9.5 9.5 0 0 1 20.4 9"/>',
+  wheel: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3v5.5M12 15.5V21M3 12h5.5M15.5 12H21"/>',
+  spray: '<path d="M8 9h6v11a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1z"/><path d="M9 9V6h4v3M13 6h2"/><path d="M18 4h.01M20 6.5h.01M18 9h.01"/>',
+};
+const Icon = ({ d, size = 24 }) => html`<svg width=${size} height=${size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" dangerouslySetInnerHTML=${{ __html: d }}></svg>`;
+
+const SERVICES = [
+  { icon: I.gauge, title: "Компьютерная диагностика", text: "Читаем все блоки дилерскими сканерами, проверяем ошибки и живые параметры. Отчёт с фото и расшифровкой.", meta: "от 40 мин" },
+  { icon: I.drop, title: "ТО по регламенту", text: "Масло, фильтры, свечи и жидкости по допускам производителя. Ставим в сервисную историю.", meta: "интервал 10–15 тыс. км" },
+  { icon: I.spring, title: "Ходовая и пневмоподвеска", text: "Стойки, рычаги, сайлентблоки, пневмобаллоны. Проверяем на стенде, до и после ремонта.", meta: "стенд люфт-детектор" },
+  { icon: I.disc, title: "Тормозная система", text: "Колодки, диски, суппорты, замена жидкости. Затягиваем по моменту из мануала, в Н·м.", meta: "DOT 4 / DOT 5.1" },
+  { icon: I.wheel, title: "Шиномонтаж и 3D-развал", text: "Колёса до 23″, run-flat, балансировка, развал-схождение на 3D-стенде с распечаткой.", meta: "R15–R23" },
+  { icon: I.spray, title: "Детейлинг и кузов", text: "Полировка, керамика, удаление вмятин без покраски, химчистка салона.", meta: "PDR без покраски" },
+];
+
+const REVIEWS = [
+  { name: "Андрей", car: "BMW X5 G05", text: "Пришёл с ошибкой по пневмоподвеске, у официалов предлагали менять оба баллона. Здесь нашли трещину в одной магистрали, показали на фото. Отремонтировали за день." },
+  { name: "Ольга", car: "Audi Q7", text: "Делаю ТО второй год. Нравится, что присылают фото снятых деталей и заранее согласуют каждую работу. Никаких сюрпризов в счёте." },
+  { name: "Дмитрий", car: "Mercedes-Benz E 300", text: "Меняли диски и колодки по кругу. Отдельно отметили износ сайлентблоков, но не навязывали, просто записали в рекомендации." },
+  { name: "Ирина", car: "Lexus RX 350", text: "Полировка и керамика. Машине восемь лет, выглядит как из салона. Забрала вечером, как договаривались." },
+  { name: "Сергей", car: "Porsche Cayenne", text: "Развал на 3D-стенде, дали распечатку до и после. Руль наконец стоит ровно, а резина больше не ест внутреннюю кромку." },
+];
+
+const SLOTS = ["09:00", "10:30", "12:00", "13:30", "15:00", "16:30", "18:00"];
+
+/* ---------- SVG scenes ---------- */
+function heroScene(mobile) {
+  const box = mobile ? `viewBox="160 230 1560 760" preserveAspectRatio="xMidYMax meet"` : `viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice"`;
+  return `
+<svg ${box} xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="hFloor" cx="58%" cy="88%" r="60%"><stop offset="0" stop-color="#3a1a0c"/><stop offset=".35" stop-color="#1a0f0a"/><stop offset="1" stop-color="#0b0b0c"/></radialGradient>
+  <linearGradient id="hWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0a0b"/><stop offset="1" stop-color="#151517"/></linearGradient>
+  <linearGradient id="cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9c2" stop-opacity=".55"/><stop offset=".6" stop-color="#ff7a40" stop-opacity=".1"/><stop offset="1" stop-color="#ff5a1f" stop-opacity="0"/></linearGradient>
+  <linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2c31"/><stop offset=".45" stop-color="#141518"/><stop offset="1" stop-color="#060607"/></linearGradient>
+  <linearGradient id="rim" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff5a1f" stop-opacity="0"/><stop offset=".35" stop-color="#ff8a55" stop-opacity=".95"/><stop offset=".7" stop-color="#ffd2b8"/><stop offset="1" stop-color="#ff5a1f" stop-opacity=".2"/></linearGradient>
+  <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3d44"/><stop offset="1" stop-color="#08090b"/></linearGradient>
+  <radialGradient id="head" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="#ffe6d6" stop-opacity=".8"/><stop offset="1" stop-color="#ff5a1f" stop-opacity="0"/></radialGradient>
+  <radialGradient id="wheelG" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3b3d42"/><stop offset="1" stop-color="#0d0d0f"/></radialGradient>
+  <filter id="blur8"><feGaussianBlur stdDeviation="8"/></filter>
+  <filter id="blur30"><feGaussianBlur stdDeviation="30"/></filter>
+  <linearGradient id="refl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  <mask id="reflMask"><rect x="0" y="700" width="1600" height="300" fill="url(#refl)"/></mask>
+</defs>
+<rect width="1600" height="1000" fill="url(#hWall)"/>
+<g opacity=".35" stroke="#1f1f22" stroke-width="2">
+  <path d="M0 150H1600M0 330H1600"/>
+  <path d="M200 0V700M520 0V700M840 0V700M1160 0V700M1480 0V700"/>
+</g>
+<rect y="690" width="1600" height="310" fill="url(#hFloor)"/>
+<path d="M0 700H1600" stroke="#2a2220" stroke-width="2"/>
+<g class="cones">
+  <polygon points="820,0 960,0 1320,760 470,760" fill="url(#cone)" opacity=".55" filter="url(#blur8)"/>
+  <polygon points="1300,0 1340,0 1600,560 1440,560" fill="url(#cone)" opacity=".25" filter="url(#blur8)"/>
+  <rect x="830" y="0" width="120" height="10" rx="4" fill="#ffe8da"/>
+</g>
+<ellipse cx="900" cy="745" rx="620" ry="40" fill="#000" opacity=".8" filter="url(#blur30)"/>
+<g id="car" transform="translate(240 300)">
+  <path d="M30,418 L30,384 C30,356 64,340 122,332 L360,316 C450,250 552,212 682,200 C826,190 944,202 1050,242 L1236,312 L1366,334 C1402,341 1426,362 1426,394 L1426,418 L1262,418 A98,98 0 0 0 1066,418 L392,418 A98,98 0 0 0 196,418 Z" fill="url(#body)"/>
+  <path d="M30,384 C30,356 64,340 122,332 L360,316 C450,250 552,212 682,200 C826,190 944,202 1050,242 L1236,312 L1366,334 C1402,341 1426,362 1426,394" fill="none" stroke="url(#rim)" stroke-width="3"/>
+  <path d="M420,314 C496,262 576,232 680,224 C778,218 862,226 940,258 L1000,312 Z" fill="url(#glass)" stroke="#2c2e33" stroke-width="2"/>
+  <path d="M700,226 L716,312" stroke="#0d0d0f" stroke-width="10"/>
+  <path d="M140,368 L1380,368" stroke="#ff5a1f" stroke-opacity=".18" stroke-width="2"/>
+  <path d="M1340,346 C1372,348 1398,358 1412,372 L1352,372 Z" fill="#fff2ea"/>
+  <ellipse cx="1390" cy="362" rx="90" ry="44" fill="url(#head)" opacity=".85"/>
+  <path d="M40,360 L80,352 L84,370 L42,374 Z" fill="#ff3a0f"/>
+  <ellipse cx="60" cy="364" rx="60" ry="24" fill="#ff3a0f" opacity=".35" filter="url(#blur8)"/>
+  <g>
+    <circle cx="294" cy="418" r="86" fill="#060607"/>
+    <circle cx="294" cy="418" r="60" fill="url(#wheelG)" stroke="#55575d" stroke-width="2"/>
+    <g stroke="#6a6c72" stroke-width="7" stroke-linecap="round">
+      <path d="M294 418L294 364M294 418L345 401M294 418L326 462M294 418L262 462M294 418L243 401"/>
+    </g>
+    <circle cx="294" cy="418" r="12" fill="#ff5a1f"/>
+    <path d="M330,350 L348,374 L336,386 Z" fill="#ff5a1f"/>
+  </g>
+  <g>
+    <circle cx="1164" cy="418" r="86" fill="#060607"/>
+    <circle cx="1164" cy="418" r="60" fill="url(#wheelG)" stroke="#55575d" stroke-width="2"/>
+    <g stroke="#6a6c72" stroke-width="7" stroke-linecap="round">
+      <path d="M1164 418L1164 364M1164 418L1215 401M1164 418L1196 462M1164 418L1132 462M1164 418L1113 401"/>
+    </g>
+    <circle cx="1164" cy="418" r="12" fill="#ff5a1f"/>
+    <path d="M1200,350 L1218,374 L1206,386 Z" fill="#ff5a1f"/>
+  </g>
+</g>
+<g mask="url(#reflMask)" opacity=".55"><use href="#car" transform="translate(0 1436) scale(1 -1)"/></g>
+</svg>`;
+}
+
+function scene(kind, state, id) {
+  const after = state === "after";
+  const bg = `<radialGradient id="${id}bg" cx="50%" cy="35%" r="75%"><stop offset="0" stop-color="#2a2a2f"/><stop offset="1" stop-color="#0a0a0c"/></radialGradient><filter id="${id}b"><feGaussianBlur stdDeviation="6"/></filter><filter id="${id}b2"><feGaussianBlur stdDeviation="2"/></filter>`;
+  const open = (defs, h = 400) => `<svg viewBox="0 0 400 ${h}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs>${bg}${defs}</defs><rect width="400" height="${h}" fill="url(#${id}bg)"/>`;
+
+  if (kind === "disc") {
+    const m = after
+      ? `<stop offset="0" stop-color="#c9ced4"/><stop offset=".5" stop-color="#7b8087"/><stop offset="1" stop-color="#3b3e43"/>`
+      : `<stop offset="0" stop-color="#8a5532"/><stop offset=".6" stop-color="#5e3621"/><stop offset="1" stop-color="#3a2214"/>`;
+    let extra = "";
+    if (after) {
+      for (const r of [142, 128, 114, 100, 86]) extra += `<circle cx="190" cy="205" r="${r}" fill="none" stroke="#fff" stroke-opacity=".07"/>`;
+      for (let i = 0; i < 18; i++) { const a = i * 20 * Math.PI / 180; extra += `<circle cx="${(190 + Math.cos(a) * 112).toFixed(1)}" cy="${(205 + Math.sin(a) * 112).toFixed(1)}" r="5" fill="#1a1b1e"/>`; }
+    } else {
+      const spots = [[120,140,34],[250,120,26],[260,270,40],[140,280,30],[90,210,22],[300,200,18],[200,320,24]];
+      for (const [x,y,r] of spots) extra += `<circle cx="${x}" cy="${y}" r="${r}" fill="#a8622f" opacity=".45" filter="url(#${id}b)"/>`;
+      for (const r of [138, 117, 96]) extra += `<circle cx="190" cy="205" r="${r}" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="3"/>`;
+    }
+    let bolts = "";
+    for (let i = 0; i < 5; i++) { const a = (i * 72 - 90) * Math.PI / 180; bolts += `<circle cx="${(190 + Math.cos(a) * 32).toFixed(1)}" cy="${(205 + Math.sin(a) * 32).toFixed(1)}" r="7" fill="#0a0a0b"/>`; }
+    return open(`<linearGradient id="${id}m" x1="0" y1="0" x2="1" y2="1">${m}</linearGradient>`) +
+      `<circle cx="190" cy="205" r="150" fill="url(#${id}m)"/>${extra}
+       <circle cx="190" cy="205" r="58" fill="#1a1b1e" stroke="#2c2d31" stroke-width="6"/>${bolts}
+       <path d="M313,102 A160,160 0 0 1 329,285 L301,269 A128,128 0 0 0 288,123 Z" fill="${after ? "#FF5A1F" : "#4a3d34"}"/>
+       ${after ? `<path d="M313,102 A160,160 0 0 1 329,285" fill="none" stroke="#ffd2b8" stroke-opacity=".6" stroke-width="2"/>` : ""}</svg>`;
+  }
+
+  if (kind === "headlight") {
+    const lens = "M40,190 C70,130 300,118 360,160 C384,180 372,260 336,276 C250,308 100,300 56,266 C28,246 26,214 40,190 Z";
+    const inner = after
+      ? `<path d="${lens}" fill="#0b0e14"/>
+         <path d="M70,178 C140,150 270,146 340,170" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" filter="url(#${id}b2)"/>
+         <path d="M70,178 C140,150 270,146 340,170" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+         <circle cx="250" cy="222" r="42" fill="#15181f" stroke="#3a3f4a" stroke-width="3"/>
+         <circle cx="250" cy="222" r="30" fill="url(#${id}p)"/>
+         <circle cx="140" cy="226" r="30" fill="#15181f" stroke="#3a3f4a" stroke-width="3"/>
+         <circle cx="140" cy="226" r="20" fill="url(#${id}p)" opacity=".8"/>
+         <path d="M60,170 C130,140 280,136 350,165" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="10" filter="url(#${id}b)"/>`
+      : `<path d="${lens}" fill="#7d6c3a"/>
+         <circle cx="250" cy="222" r="42" fill="#5f5230"/><circle cx="140" cy="226" r="30" fill="#5f5230"/>
+         <path d="${lens}" fill="#c9b778" opacity=".35" filter="url(#${id}b)"/>
+         <g stroke="#d9cd9a" stroke-opacity=".35" stroke-width="1.5">
+           <path d="M90,200 L170,186M120,250 L230,232M200,190 L300,206M260,262 L330,240M70,232 L140,222"/>
+         </g>`;
+    return open(`<radialGradient id="${id}p"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#cfe4ff"/><stop offset="1" stop-color="#4b6a99"/></radialGradient>`) +
+      `<path d="M0,320 C120,300 280,300 400,320 L400,400 L0,400 Z" fill="#141518"/>
+       <path d="M0,110 C120,90 300,90 400,110 L400,0 L0,0 Z" fill="#141518"/>
+       ${inner}
+       <path d="${lens}" fill="none" stroke="#2f3238" stroke-width="5"/></svg>`;
+  }
+
+  if (kind === "rim") {
+    let spokes = "";
+    for (let i = 0; i < 5; i++) spokes += `<path transform="rotate(${i * 72} 200 200)" d="M190,196 L176,84 C190,78 210,78 224,84 L210,196 Z" fill="${after ? `url(#${id}s)` : "#5a5c60"}"/>`;
+    const dirt = after ? "" : `<circle cx="200" cy="200" r="128" fill="#6b5a44" opacity=".35"/>
+      <g stroke="#c9c9c9" stroke-opacity=".6" stroke-width="2" fill="none">
+        <path d="M110,290 l10,-4 l6,6 l8,-5 l7,5 l9,-3"/><path d="M300,110 l6,9 l-2,8 l7,7"/><path d="M80,190 l3,12 l-4,9"/>
+      </g>`;
+    const shine = after ? `<path d="M110,120 A128,128 0 0 1 250,80" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="200" cy="200" r="10" fill="#FF5A1F"/>` : "";
+    return open(`<linearGradient id="${id}s" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef1f4"/><stop offset=".5" stop-color="#9aa0a7"/><stop offset="1" stop-color="#4a4e55"/></linearGradient>`) +
+      `<circle cx="200" cy="200" r="182" fill="#0b0b0c" stroke="#1e1e21" stroke-width="12"/>
+       <circle cx="200" cy="200" r="132" fill="#101012" stroke="${after ? "#b8bec5" : "#56585c"}" stroke-width="7"/>
+       ${spokes}
+       <circle cx="200" cy="200" r="34" fill="${after ? "#2a2c30" : "#3a3a3c"}" stroke="${after ? "#c9ced4" : "#55575a"}" stroke-width="3"/>
+       ${dirt}${shine}</svg>`;
+  }
+
+  if (kind === "paint") {
+    const h = 300;
+    let swirls = "";
+    if (!after) for (let r = 18; r < 300; r += 16) swirls += `<circle cx="230" cy="190" r="${r}" fill="none" stroke="#fff" stroke-opacity=".07"/>`;
+    return open(`<linearGradient id="${id}p" x1="0" y1="0" x2="0" y2="1">${after
+        ? `<stop offset="0" stop-color="#3b3e45"/><stop offset=".45" stop-color="#121316"/><stop offset="1" stop-color="#050506"/>`
+        : `<stop offset="0" stop-color="#3a3b3f"/><stop offset="1" stop-color="#26272a"/>`}</linearGradient>
+        <clipPath id="${id}c"><path d="M0,90 C120,62 280,62 400,84 L400,300 L0,300 Z"/></clipPath>`, h) +
+      `<path d="M0,90 C120,62 280,62 400,84 L400,300 L0,300 Z" fill="url(#${id}p)"/>
+       <g clip-path="url(#${id}c)">${swirls}
+         ${after
+           ? `<path d="M0,150 C140,122 260,122 400,140 L400,150 C260,134 140,134 0,162 Z" fill="#fff" opacity=".75"/>
+              <path d="M0,196 C140,172 260,172 400,188 L400,193 C260,179 140,179 0,203 Z" fill="#FF5A1F" opacity=".7"/>`
+           : `<path d="M0,150 C140,122 260,122 400,140 L400,162 C260,146 140,146 0,174 Z" fill="#fff" opacity=".16" filter="url(#${id}b)"/>`}
+       </g></svg>`;
+  }
+
+  if (kind === "dent") {
+    let lines = "";
+    for (let k = 0; k < 6; k++) {
+      const y = 110 + k * 34;
+      lines += after
+        ? `<path d="M0,${y} L400,${y - 6}" stroke="#fff" stroke-opacity="${0.12 + k * 0.03}" stroke-width="2" fill="none"/>`
+        : `<path d="M0,${y} C150,${y} 160,${y + 26 - Math.abs(k - 2.5) * 6} 200,${y + 30 - Math.abs(k - 2.5) * 7} C240,${y + 26 - Math.abs(k - 2.5) * 6} 250,${y} 400,${y - 6}" stroke="#fff" stroke-opacity="${0.12 + k * 0.03}" stroke-width="2" fill="none"/>`;
+    }
+    return open(`<linearGradient id="${id}d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2c31"/><stop offset="1" stop-color="#101114"/></linearGradient>
+      <radialGradient id="${id}r" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset=".7" stop-color="#000" stop-opacity=".15"/><stop offset="1" stop-color="#fff" stop-opacity=".08"/></radialGradient>`) +
+      `<rect x="0" y="60" width="400" height="300" fill="url(#${id}d)"/>
+       <path d="M0,74 L400,66" stroke="#4a4d54" stroke-width="3"/>
+       <rect x="300" y="200" width="60" height="16" rx="8" fill="#0a0a0b" stroke="#3a3c42"/>
+       ${after ? "" : `<ellipse cx="200" cy="215" rx="110" ry="78" fill="url(#${id}r)"/>`}
+       ${lines}</svg>`;
+  }
+
+  if (kind === "seat") {
+    const leather = after ? "#2b2420" : "#2a2420";
+    const stains = after ? "" : `<g filter="url(#${id}b)"><ellipse cx="170" cy="150" rx="36" ry="24" fill="#6b5638" opacity=".55"/><ellipse cx="230" cy="290" rx="44" ry="18" fill="#6b5638" opacity=".5"/><ellipse cx="240" cy="110" rx="20" ry="14" fill="#7a6448" opacity=".45"/></g>`;
+    const stitch = after ? "#FF5A1F" : "#5a4a3c";
+    return open(`<linearGradient id="${id}l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".4"/><stop offset=".45" stop-color="#fff" stop-opacity="${after ? ".12" : ".03"}"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></linearGradient>`) +
+      `<rect x="112" y="40" width="176" height="230" rx="46" fill="${leather}"/>
+       <rect x="112" y="40" width="176" height="230" rx="46" fill="url(#${id}l)"/>
+       <rect x="92" y="252" width="216" height="100" rx="34" fill="${leather}"/>
+       <rect x="92" y="252" width="216" height="100" rx="34" fill="url(#${id}l)"/>
+       <g stroke="${stitch}" stroke-width="2" stroke-dasharray="5 5" fill="none">
+         <path d="M160,60 L160,250M240,60 L240,250M140,272 L140,336M260,272 L260,336"/>
+       </g>
+       <rect x="150" y="8" width="100" height="40" rx="18" fill="${leather}"/>
+       ${stains}</svg>`;
+  }
+  return "";
+}
+
+const WORKS = [
+  { kind: "disc", title: "Тормозные диски и суппорты", tag: "Тормоза", ratio: "4 / 5" },
+  { kind: "headlight", title: "Полировка фар", tag: "Детейлинг", ratio: "1 / 1" },
+  { kind: "paint", title: "Полировка и керамика", tag: "Детейлинг", ratio: "4 / 3" },
+  { kind: "rim", title: "Восстановление дисков", tag: "Колёса", ratio: "1 / 1" },
+  { kind: "dent", title: "Вмятина без покраски", tag: "Кузов", ratio: "4 / 3" },
+  { kind: "seat", title: "Химчистка кожи", tag: "Салон", ratio: "4 / 5" },
+];
+
+/* ---------- building blocks ---------- */
+function Reveal({ children, delay = 0, className = "", as = "div" }) {
+  const reduce = useReducedMotion();
+  const C = motion[as];
+  return html`<${C} className=${className}
+    initial=${reduce ? false : { opacity: 0.12, y: 36 }}
+    whileInView=${{ opacity: 1, y: 0 }}
+    viewport=${{ once: true, amount: 0.15 }}
+    transition=${{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}>${children}<//>`;
+}
+
+function Header() {
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 24);
+    on(); window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
+  const links = [["#services", "Услуги"], ["#why", "Почему мы"], ["#works", "Работы"], ["#reviews", "Отзывы"], ["#contacts", "Контакты"]];
+  return html`<header className=${"site-header " + (scrolled || open ? "scrolled" : "")}>
+    <div className="wrap flex items-center justify-between" style=${{ height: 72 }}>
+      <a href="#top" className="display flex items-center gap-2" style=${{ fontSize: 22, fontWeight: 700, color: "var(--fg)", textDecoration: "none", letterSpacing: ".04em" }}>
+        <span style=${{ width: 10, height: 10, borderRadius: 3, background: "var(--accent)", boxShadow: "0 0 14px var(--accent)" }}></span>
+        ${SITE.name.toUpperCase()}
+      </a>
+      <nav className="hidden lg:flex items-center gap-8" aria-label="Разделы">
+        ${links.map(([h, t]) => html`<a key=${h} href=${h} className="muted hover:text-white transition-colors" style=${{ textDecoration: "none", fontSize: 15, fontWeight: 400 }}>${t}</a>`)}
+      </nav>
+      <div className="flex items-center gap-3">
+        <a href="#book" className="btn btn-primary hidden sm:inline-flex" style=${{ height: 44, padding: "0 20px", textDecoration: "none" }}>Записаться</a>
+        <button className="round-btn lg:hidden" aria-label=${open ? "Закрыть меню" : "Открыть меню"} aria-expanded=${open} onClick=${() => setOpen(!open)}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">${open
+            ? html`<path d="M6 6l12 12M18 6L6 18"/>` : html`<path d="M4 7h16M4 12h16M4 17h10"/>`}</svg>
+        </button>
+      </div>
+    </div>
+    <${AnimatePresence}>${open && html`<${motion.nav} key="m" className="lg:hidden wrap" aria-label="Меню"
+      initial=${{ height: 0, opacity: 0 }} animate=${{ height: "auto", opacity: 1 }} exit=${{ height: 0, opacity: 0 }} style=${{ overflow: "hidden" }}>
+      <div className="flex flex-col" style=${{ paddingBlock: "8px 24px" }}>
+        ${links.map(([h, t]) => html`<a key=${h} href=${h} onClick=${() => setOpen(false)} className="display" style=${{ color: "var(--fg)", textDecoration: "none", fontSize: 26, fontWeight: 600, padding: "10px 0", borderBottom: "1px solid var(--line)" }}>${t}</a>`)}
+        <a href="#book" onClick=${() => setOpen(false)} className="btn btn-primary" style=${{ marginTop: 20, textDecoration: "none" }}>Записаться на сервис</a>
+      </div>
+    <//>`}<//>
+  </header>`;
+}
+
+function Hero() {
+  const ref = useRef(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const sceneY = useTransform(scrollYProgress, [0, 1], reduce ? ["0%", "0%"] : ["0%", "22%"]);
+  const sceneScale = useTransform(scrollYProgress, [0, 1], reduce ? [1, 1] : [1, 1.08]);
+  const textY = useTransform(scrollYProgress, [0, 1], reduce ? ["0%", "0%"] : ["0%", "-30%"]);
+  const fade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+  const svg = useMemo(() => heroScene(window.matchMedia("(max-width: 767px)").matches), []);
+  const intro = (d) => reduce ? {} : { initial: { opacity: 0, y: 30 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.9, delay: d, ease: [0.22, 1, 0.36, 1] } };
+
+  return html`<section id="top" ref=${ref} className="hero" style=${{ marginTop: -72 }}>
+    <${motion.div} className="hero-scene" style=${{ y: sceneY, scale: sceneScale }} aria-hidden="true" dangerouslySetInnerHTML=${{ __html: svg }} />
+    <${motion.div} className="wrap w-full hero-content" style=${{ y: textY, opacity: fade, paddingBlock: "140px 72px" }}>
+      <div className="grid gap-10 lg:grid-cols-[1fr_auto] items-end">
+        <div style=${{ minWidth: 0 }}>
+          <${motion.p} className="eyebrow" ...${intro(0.1)}>Автосервис премиальных марок · ${SITE.city}<//>
+          <${motion.h1} style=${{ margin: "18px 0 22px", maxWidth: 900 }} ...${intro(0.2)}>Твой автомобиль заслуживает <em>лучшего</em><//>
+          <${motion.p} className="muted" style=${{ fontSize: "clamp(17px,1.6vw,20px)", maxWidth: 560, margin: 0 }} ...${intro(0.35)}>
+            Диагностика, ТО и ремонт по регламентам производителя. Каждую работу согласуем до начала и присылаем фотоотчёт.
+          <//>
+          <${motion.div} className="flex flex-wrap gap-3" style=${{ marginTop: 34 }} ...${intro(0.5)}>
+            <${motion.a} href="#book" className="btn btn-primary" style=${{ textDecoration: "none" }} whileHover=${{ y: -2 }} whileTap=${{ scale: 0.97 }}>
+              Записаться на сервис <span className="arrow" aria-hidden="true">→</span>
+            <//>
+            <${motion.a} href=${"tel:" + SITE.phoneHref} className="btn btn-ghost" style=${{ textDecoration: "none" }} whileHover=${{ y: -2 }} whileTap=${{ scale: 0.97 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+              <span className="tnum">${SITE.phone}</span>
+            <//>
+          <//>
+          <${motion.p} className="spec" style=${{ marginTop: 36 }} ...${intro(0.65)}>
+            <b>${SITE.bays}</b> постов · <b>3D</b>-развал · дилерские сканеры · гарантия <b>${SITE.warrantyMonths}</b> мес.
+          <//>
+        </div>
+        <${motion.div} className="glass" style=${{ borderRadius: 24, padding: "22px 24px", width: "min(100%, 300px)" }}
+          ...${reduce ? {} : { initial: { opacity: 0, x: 30 }, animate: { opacity: 1, x: 0 }, transition: { duration: 1, delay: 0.7, ease: [0.22, 1, 0.36, 1] } }}>
+          <div className="flex items-center gap-3">
+            <span className="display tnum" style=${{ fontSize: 46, fontWeight: 700, lineHeight: 1 }}>${SITE.rating}</span>
+            <div>
+              <div style=${{ color: "var(--accent)", letterSpacing: 2, fontSize: 15 }} aria-label="Пять звёзд">★★★★★</div>
+              <div className="muted" style=${{ fontSize: 13 }}>рейтинг на картах</div>
+            </div>
+          </div>
+          <div style=${{ height: 1, background: "var(--line)", margin: "16px 0" }}></div>
+          <p style=${{ margin: 0, fontSize: 15 }}>Более <b className="display tnum" style=${{ fontWeight: 600 }}>${SITE.clients.toLocaleString("ru-RU")}</b> довольных клиентов</p>
+          <div className="flex" style=${{ marginTop: 12 }}>
+            ${["#ff8a55", "#c9ced4", "#7b8087", "#3a3d44"].map((c, i) => html`<span key=${i} style=${{ width: 30, height: 30, borderRadius: "50%", background: c, border: "2px solid #1a1a1d", marginLeft: i ? -8 : 0 }}></span>`)}
+          </div>
+        <//>
+      </div>
+    <//>
+  </section>`;
+}
+
+function Brands() {
+  const row = [...BRANDS, ...BRANDS];
+  return html`<section aria-label="Марки, которые мы обслуживаем" style=${{ borderBlock: "1px solid var(--line)", background: "var(--bg-2)" }}>
+    <div className="wrap flex flex-col md:flex-row md:items-center gap-4 md:gap-10" style=${{ paddingBlock: 30 }}>
+      <p className="spec" style=${{ margin: 0, flexShrink: 0 }}>Обслуживаем</p>
+      <div className="marquee overflow-hidden" style=${{ minWidth: 0, flex: 1 }}>
+        <div className="marquee-track">${row.map((b, i) => html`<span key=${i} className="brand" aria-hidden=${i >= BRANDS.length}>${b}</span>`)}</div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function SectionHead({ eyebrow, title, text }) {
+  return html`<${Reveal} className="grid gap-4 md:grid-cols-[1fr_1fr] md:items-end" >
+    <div style=${{ minWidth: 0 }}>
+      <p className="eyebrow" style=${{ margin: 0 }}>${eyebrow}</p>
+      <h2 style=${{ fontSize: "clamp(34px,4.6vw,60px)", lineHeight: 1.02, margin: "14px 0 0", fontWeight: 700 }}>${title}</h2>
+    </div>
+    ${text && html`<p className="muted" style=${{ margin: 0, maxWidth: 460, fontSize: 17 }}>${text}</p>`}
+  <//>`;
+}
+
+function Services() {
+  return html`<section id="services" style=${{ position: "relative", overflow: "hidden" }}>
+    <div aria-hidden="true" style=${{ position: "absolute", top: 80, right: "-10%", width: 520, height: 520, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,90,31,.14), transparent 65%)", pointerEvents: "none" }}></div>
+    <div className="wrap" style=${{ paddingBlock: "110px 40px", position: "relative" }}>
+      <${SectionHead} eyebrow="Услуги" title="Всё, что нужно машине, под одной крышей" text="Шесть направлений, одна приёмка. Мастер-приёмщик ведёт автомобиль от диагностики до выдачи." />
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" style=${{ marginTop: 56 }}>
+        ${SERVICES.map((s, i) => html`<${Reveal} key=${s.title} delay=${(i % 3) * 0.08}>
+          <${motion.article} className="svc glass h-full flex flex-col" whileHover=${{ y: -8 }} transition=${{ type: "spring", stiffness: 300, damping: 22 }}>
+            <div className="ico"><${Icon} d=${s.icon} size=${26} /></div>
+            <h3 style=${{ fontSize: 22, fontWeight: 600, margin: "26px 0 10px", lineHeight: 1.2 }}>${s.title}</h3>
+            <p className="muted" style=${{ margin: 0, fontSize: 15.5, flex: 1 }}>${s.text}</p>
+            <div className="flex items-center justify-between" style=${{ marginTop: 24, paddingTop: 18, borderTop: "1px solid var(--line)" }}>
+              <span className="spec">${s.meta}</span>
+              <a href="#book" aria-label=${"Записаться: " + s.title} style=${{ color: "var(--accent)", textDecoration: "none", fontSize: 20 }}>→</a>
+            </div>
+          <//>
+        <//>`)}
+      </div>
+    </div>
+  </section>`;
+}
+
+function Counter({ to, duration = 1.8 }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.6 });
+  const reduce = useReducedMotion();
+  const [v, setV] = useState(reduce ? to : 0);
+  useEffect(() => {
+    if (!inView || reduce) return;
+    const c = animate(0, to, { duration, ease: [0.16, 1, 0.3, 1], onUpdate: (x) => setV(Math.round(x)) });
+    return () => c.stop();
+  }, [inView]);
+  return html`<span ref=${ref} className="tnum">${v.toLocaleString("ru-RU")}</span>`;
+}
+
+function Why() {
+  const stats = [
+    { n: SITE.years, sup: "", label: "лет работаем с премиальными марками" },
+    { n: SITE.masters, sup: "", label: "мастеров с сертификатами производителей" },
+    { n: SITE.warrantyMonths, sup: "мес", label: "гарантии на работы и запчасти" },
+    { n: SITE.clients, sup: "+", label: "клиентов, которые возвращаются" },
+  ];
+  const points = [
+    ["Согласование до начала", "Сначала диагностика и смета, потом работа. Без доплат «по ходу»."],
+    ["Фотоотчёт в мессенджер", "Видите снятые детали и каждый этап ремонта, не приезжая в сервис."],
+    ["Запчасти на выбор", "Оригинал или проверенный аналог: показываем разницу в цене и ресурсе."],
+  ];
+  return html`<section id="why" style=${{ background: "linear-gradient(180deg, var(--bg), var(--bg-2))" }}>
+    <div className="wrap" style=${{ paddingBlock: 110 }}>
+      <${SectionHead} eyebrow="Почему мы" title="Цифры, за которые отвечаем" />
+      <div className="grid grid-cols-2 lg:grid-cols-4" style=${{ marginTop: 56, borderTop: "1px solid var(--line)" }}>
+        ${stats.map((s, i) => html`<${Reveal} key=${i} delay=${i * 0.08} className="flex flex-col gap-3" >
+          <div style=${{ padding: "34px 18px 34px 0", borderBottom: "1px solid var(--line)", height: "100%" }}>
+            <div className="stat-num"><${Counter} to=${s.n} />${s.sup && html`<sup>${s.sup}</sup>`}</div>
+            <p className="muted" style=${{ margin: "14px 0 0", fontSize: 15, maxWidth: 220 }}>${s.label}</p>
+          </div>
+        <//>`)}
+      </div>
+      <div className="grid gap-8 md:grid-cols-3" style=${{ marginTop: 56 }}>
+        ${points.map(([t, d], i) => html`<${Reveal} key=${t} delay=${i * 0.1}>
+          <div className="flex gap-4">
+            <span style=${{ flexShrink: 0, width: 26, height: 26, borderRadius: "50%", border: "1.5px solid var(--accent)", display: "grid", placeItems: "center", color: "var(--accent)", fontSize: 14, marginTop: 2 }}>✓</span>
+            <div><h3 style=${{ margin: 0, fontSize: 19, fontWeight: 600 }}>${t}</h3><p className="muted" style=${{ margin: "6px 0 0", fontSize: 15.5 }}>${d}</p></div>
+          </div>
+        <//>`)}
+      </div>
+    </div>
+  </section>`;
+}
+
+function BeforeAfter({ w, idx }) {
+  const [pos, setPos] = useState(50);
+  const before = useMemo(() => scene(w.kind, "before", "b" + idx), []);
+  const after = useMemo(() => scene(w.kind, "after", "a" + idx), []);
+  return html`<${Reveal} delay=${(idx % 3) * 0.08}>
+    <figure className="ba" style=${{ aspectRatio: w.ratio, "--pos": pos + "%", margin: "0 0 18px" }}>
+      <div className="ba-layer" dangerouslySetInnerHTML=${{ __html: after }}></div>
+      <div className="ba-layer ba-before" dangerouslySetInnerHTML=${{ __html: before }}></div>
+      <div className="ba-handle"></div>
+      <span className="ba-tag" style=${{ left: 14 }}>До</span>
+      <span className="ba-tag" style=${{ right: 14, color: "var(--accent)" }}>После</span>
+      <figcaption className="ba-cap">
+        <span className="spec">${w.tag}</span>
+        <div className="display" style=${{ fontSize: 19, fontWeight: 600, marginTop: 2 }}>${w.title}</div>
+      </figcaption>
+      <input id=${"ba-" + idx} type="range" min="0" max="100" value=${pos} onInput=${(e) => setPos(+e.target.value)} onChange=${(e) => setPos(+e.target.value)} aria-label=${"Сравнить до и после: " + w.title} />
+    </figure>
+  <//>`;
+}
+
+function Works() {
+  return html`<section id="works">
+    <div className="wrap" style=${{ paddingBlock: "110px 92px" }}>
+      <${SectionHead} eyebrow="Галерея работ" title="До и после" text="Потяните ползунок на любой карточке, чтобы сравнить состояние до работ и после." />
+      <div className="masonry" style=${{ marginTop: 56 }}>
+        ${WORKS.map((w, i) => html`<${BeforeAfter} key=${w.kind} w=${w} idx=${i} />`)}
+      </div>
+    </div>
+  </section>`;
+}
+
+function Reviews() {
+  const [i, setI] = useState(0);
+  const [dir, setDir] = useState(1);
+  const [paused, setPaused] = useState(false);
+  const reduce = useReducedMotion();
+  const go = (d) => { setDir(d); setI((p) => (p + d + REVIEWS.length) % REVIEWS.length); };
+  useEffect(() => {
+    if (paused || reduce) return;
+    const t = setInterval(() => go(1), 6500);
+    return () => clearInterval(t);
+  }, [paused, i]);
+  const r = REVIEWS[i];
+  const next = REVIEWS[(i + 1) % REVIEWS.length];
+  return html`<section id="reviews" style=${{ background: "var(--bg-2)", borderBlock: "1px solid var(--line)" }}>
+    <div className="wrap" style=${{ paddingBlock: 110 }}>
+      <${SectionHead} eyebrow="Отзывы" title="Что говорят владельцы" />
+      <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]" style=${{ marginTop: 56 }} onMouseEnter=${() => setPaused(true)} onMouseLeave=${() => setPaused(false)}>
+        <div style=${{ position: "relative", minWidth: 0, minHeight: 330 }} aria-live="polite">
+          <${AnimatePresence} mode="wait" custom=${dir}>
+            <${motion.blockquote} key=${i} className="review-card glass" style=${{ margin: 0, height: "100%" }}
+              initial=${reduce ? false : { opacity: 0, x: dir * 60 }} animate=${{ opacity: 1, x: 0 }} exit=${reduce ? {} : { opacity: 0, x: dir * -60 }}
+              transition=${{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              drag=${reduce ? false : "x"} dragConstraints=${{ left: 0, right: 0 }} dragElastic=${0.2}
+              onDragEnd=${(e, info) => { if (info.offset.x < -60) go(1); else if (info.offset.x > 60) go(-1); }}>
+              <div className="flex items-center justify-between">
+                <span style=${{ color: "var(--accent)", letterSpacing: 3 }} aria-label="Пять звёзд">★★★★★</span>
+                <span className="spec" style=${{ border: "1px solid var(--line)", borderRadius: 999, padding: "3px 10px", letterSpacing: ".1em" }}>Пример отзыва</span>
+              </div>
+              <p className="display" style=${{ fontSize: "clamp(20px,2.3vw,28px)", lineHeight: 1.35, fontWeight: 500, margin: "26px 0 30px", letterSpacing: "-0.01em" }}>«${r.text}»</p>
+              <footer className="flex items-center gap-3">
+                <span className="display" style=${{ width: 44, height: 44, borderRadius: "50%", background: "var(--accent-soft)", color: "var(--accent)", display: "grid", placeItems: "center", fontWeight: 700 }}>${r.name[0]}</span>
+                <div><div style=${{ fontWeight: 500 }}>${r.name}</div><div className="muted" style=${{ fontSize: 14 }}>${r.car}</div></div>
+              </footer>
+            <//>
+          <//>
+        </div>
+        <div className="flex flex-col gap-5" style=${{ minWidth: 0 }}>
+          <button className="glass hidden lg:block text-left" onClick=${() => go(1)} style=${{ borderRadius: 24, padding: 28, color: "var(--fg)", cursor: "pointer", flex: 1, font: "inherit" }}>
+            <span className="spec">Следующий · ${next.car}</span>
+            <p className="muted" style=${{ margin: "12px 0 0", fontSize: 15, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>${next.text}</p>
+          </button>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2" role="tablist" aria-label="Выбор отзыва">
+              ${REVIEWS.map((_, k) => html`<button key=${k} className=${"dot " + (k === i ? "on" : "")} role="tab" aria-selected=${k === i} aria-label=${"Отзыв " + (k + 1)} onClick=${() => { setDir(k > i ? 1 : -1); setI(k); }}></button>`)}
+            </div>
+            <div className="flex gap-2">
+              <${motion.button} className="round-btn" aria-label="Предыдущий отзыв" onClick=${() => go(-1)} whileTap=${{ scale: 0.9 }}>←<//>
+              <${motion.button} className="round-btn" aria-label="Следующий отзыв" onClick=${() => go(1)} whileTap=${{ scale: 0.9 }}>→<//>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function Booking() {
+  const today = new Date();
+  const iso = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const tomorrow = new Date(today.getTime() + 86400000);
+  const [form, setForm] = useState({ name: "", phone: "", service: SERVICES[0].title, date: iso(tomorrow), slot: "10:30" });
+  const [errors, setErrors] = useState({});
+  const [done, setDone] = useState(false);
+  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const submit = (e) => {
+    e.preventDefault();
+    const er = {};
+    if (form.name.trim().length < 2) er.name = "Укажите имя, чтобы мастер знал, как к вам обращаться.";
+    if (form.phone.replace(/\D/g, "").length < 9) er.phone = "Нужен номер телефона целиком, минимум 9 цифр.";
+    if (!form.date) er.date = "Выберите дату визита.";
+    setErrors(er);
+    if (!Object.keys(er).length) setDone(true);
+  };
+  const dateLabel = form.date ? new Date(form.date + "T12:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" }) : "";
+
+  return html`<section id="book" style=${{ position: "relative", overflow: "hidden" }}>
+    <div aria-hidden="true" style=${{ position: "absolute", left: "-15%", bottom: "-30%", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,90,31,.13), transparent 65%)", pointerEvents: "none" }}></div>
+    <div className="wrap grid gap-14 lg:grid-cols-[1fr_1.15fr]" style=${{ paddingBlock: 110, position: "relative" }}>
+      <${Reveal}>
+        <p className="eyebrow" style=${{ margin: 0 }}>Запись</p>
+        <h2 style=${{ fontSize: "clamp(34px,4.6vw,60px)", lineHeight: 1.02, margin: "14px 0 20px", fontWeight: 700 }}>Выберите услугу и удобное время</h2>
+        <p className="muted" style=${{ fontSize: 17, maxWidth: 440, margin: 0 }}>Перезвоним в течение 15 минут в рабочее время, уточним симптомы и подтвердим запись.</p>
+        <div style=${{ marginTop: 36 }}>
+          ${SITE.hours.map(([d, h]) => html`<div key=${d} className="flex justify-between tnum" style=${{ maxWidth: 340, padding: "12px 0", borderBottom: "1px solid var(--line)" }}><span className="muted">${d}</span><span>${h}</span></div>`)}
+        </div>
+      <//>
+      <${Reveal} delay=${0.1}>
+        <div className="glass" style=${{ borderRadius: 28, padding: "clamp(24px,4vw,44px)" }}>
+          <${AnimatePresence} mode="wait">
+          ${done ? html`<${motion.div} key="ok" initial=${{ opacity: 0, scale: 0.96 }} animate=${{ opacity: 1, scale: 1 }} style=${{ textAlign: "center", padding: "30px 0" }} role="status">
+              <div style=${{ width: 72, height: 72, margin: "0 auto", borderRadius: "50%", background: "var(--accent)", display: "grid", placeItems: "center", color: "#140700", fontSize: 32, boxShadow: "0 0 50px rgba(255,90,31,.6)" }}>✓</div>
+              <h3 style=${{ fontSize: 28, margin: "24px 0 8px" }}>Заявка готова</h3>
+              <p className="muted" style=${{ margin: "0 auto", maxWidth: 380 }}>${form.name}, ${form.service.toLowerCase()} — ${dateLabel}, ${form.slot}. Это демо-версия сайта: заявка никуда не отправлена.</p>
+              <button className="btn btn-ghost" style=${{ marginTop: 26 }} onClick=${() => setDone(false)}>Изменить запись</button>
+            <//>` : html`<${motion.form} key="f" onSubmit=${submit} noValidate className="grid gap-7" initial=${{ opacity: 0 }} animate=${{ opacity: 1 }} exit=${{ opacity: 0 }}>
+              <div className="grid gap-7 sm:grid-cols-2">
+                <div className="field"><label htmlFor="f-name">Имя</label><input id="f-name" autoComplete="name" placeholder="Как к вам обращаться" value=${form.name} onInput=${set("name")} />${errors.name && html`<p className="err">${errors.name}</p>`}</div>
+                <div className="field"><label htmlFor="f-phone">Телефон</label><input id="f-phone" type="tel" autoComplete="tel" placeholder="+375 (__) ___-__-__" value=${form.phone} onInput=${set("phone")} />${errors.phone && html`<p className="err">${errors.phone}</p>`}</div>
+              </div>
+              <div className="grid gap-7 sm:grid-cols-2">
+                <div className="field"><label htmlFor="f-service">Услуга</label>
+                  <select id="f-service" value=${form.service} onChange=${set("service")}>${SERVICES.map((s) => html`<option key=${s.title}>${s.title}</option>`)}</select></div>
+                <div className="field"><label htmlFor="f-date">Дата</label><input id="f-date" type="date" min=${iso(today)} value=${form.date} onInput=${set("date")} onChange=${set("date")} />${errors.date && html`<p className="err">${errors.date}</p>`}</div>
+              </div>
+              <div className="field">
+                <label>Время</label>
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Время визита">
+                  ${SLOTS.map((t) => html`<${motion.button} key=${t} type="button" className="chip tnum" aria-pressed=${form.slot === t} onClick=${() => setForm({ ...form, slot: t })} whileTap=${{ scale: 0.94 }}>${t}<//>`)}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-4" style=${{ marginTop: 6 }}>
+                <p className="demo-note" style=${{ margin: 0, maxWidth: 260 }}>Нажимая кнопку, вы соглашаетесь на обработку контактных данных для записи.</p>
+                <${motion.button} type="submit" className="btn btn-primary" whileHover=${{ y: -2 }} whileTap=${{ scale: 0.97 }}>Записаться <span className="arrow" aria-hidden="true">→</span><//>
+              </div>
+            <//>`}
+          <//>
+        </div>
+      <//>
+    </div>
+  </section>`;
+}
+
+function MapArt() {
+  return html`<svg viewBox="0 0 640 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Схема проезда">
+    <rect width="640" height="400" fill="#111114"/>
+    <path d="M-20 300 C120 250 220 330 360 290 C480 255 560 300 680 270 L680 330 C560 360 480 315 360 350 C220 390 120 310 -20 360 Z" fill="#14202a"/>
+    <g stroke="#1f1f24" stroke-width="18" fill="none"><path d="M0 120H640M0 210H640M140 0V400M330 0V400M500 0V400"/></g>
+    <g stroke="#2a2a30" stroke-width="2" fill="none"><path d="M0 120H640M0 210H640M140 0V400M330 0V400M500 0V400"/></g>
+    <g stroke="#19191d" stroke-width="6" fill="none"><path d="M0 60H640M60 0V400M240 0V250M420 0V250M580 0V400M0 165H640"/></g>
+    <g fill="#18181c"><rect x="160" y="135" width="150" height="60" rx="4"/><rect x="350" y="135" width="130" height="60" rx="4"/><rect x="160" y="20" width="60" height="85" rx="4"/><rect x="350" y="20" width="130" height="85" rx="4"/><rect x="520" y="135" width="100" height="60" rx="4"/></g>
+    <path d="M140 400 V210 H330" stroke="#FF5A1F" stroke-width="4" stroke-dasharray="2 10" stroke-linecap="round" fill="none" opacity=".8"/>
+    <circle cx="330" cy="210" r="16" fill="#FF5A1F" opacity=".5" className="pin-pulse"/>
+    <circle cx="330" cy="210" r="9" fill="#FF5A1F" stroke="#0E0E10" stroke-width="3"/>
+    <rect x="348" y="222" width="138" height="34" rx="8" fill="#0E0E10" stroke="#2a2a30"/>
+    <text x="362" y="244" fill="#F2F0EE" font-family="Space Grotesk, sans-serif" font-size="14" font-weight="600">${SITE.name} · вход с торца</text>
+  </svg>`;
+}
+
+function Footer() {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(SITE.phone); setCopied(true); setTimeout(() => setCopied(false), 1600); }
+    catch (e) { const el = document.getElementById("phone-text"); const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  };
+  return html`<footer id="contacts" style=${{ borderTop: "1px solid var(--line)" }}>
+    <div className="wrap grid gap-12 lg:grid-cols-[1.3fr_1fr]" style=${{ paddingBlock: "92px 40px" }}>
+      <${Reveal}>
+        <a href=${SITE.mapUrl} target="_blank" rel="noopener" className="map block" aria-label="Открыть на Яндекс Картах"><${MapArt} /></a>
+        <a href=${SITE.mapUrl} target="_blank" rel="noopener" className="muted" style=${{ display: "inline-block", marginTop: 12, fontSize: 14 }}>Открыть маршрут на Яндекс Картах ↗</a>
+      <//>
+      <${Reveal} delay=${0.1} className="flex flex-col gap-8">
+        <div>
+          <p className="eyebrow" style=${{ margin: 0 }}>Контакты</p>
+          <h2 style=${{ fontSize: "clamp(30px,3.6vw,46px)", lineHeight: 1.05, margin: "14px 0 0", fontWeight: 700 }}>${SITE.city}, ${SITE.address}</h2>
+        </div>
+        <div>
+          <div className="spec" style=${{ marginBottom: 6 }}>Телефон</div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <a id="phone-text" href=${"tel:" + SITE.phoneHref} className="display tnum" style=${{ fontSize: 26, fontWeight: 600, color: "var(--fg)", textDecoration: "none", userSelect: "all" }}>${SITE.phone}</a>
+            <button className="copy-btn" onClick=${copy}>${copied ? "Скопировано" : "Копировать"}</button>
+          </div>
+        </div>
+        <div>
+          <div className="spec" style=${{ marginBottom: 6 }}>Часы работы</div>
+          ${SITE.hours.map(([d, h]) => html`<div key=${d} className="tnum"><span className="muted" style=${{ display: "inline-block", width: 70 }}>${d}</span>${h}</div>`)}
+        </div>
+        <a href="#book" className="btn btn-primary self-start" style=${{ textDecoration: "none" }}>Записаться на сервис <span className="arrow" aria-hidden="true">→</span></a>
+      <//>
+    </div>
+    <div className="wrap flex flex-col sm:flex-row justify-between gap-3" style=${{ paddingBlock: "24px 36px", borderTop: "1px solid var(--line)" }}>
+      <span className="demo-note">© ${new Date().getFullYear()} ${SITE.name}. Автосервис премиальных марок.</span>
+      <span className="demo-note">Демо-шаблон: название, адрес, цифры и отзывы — примеры, их нужно заменить реальными данными.</span>
+    </div>
+  </footer>`;
+}
+
+function App() {
+  return html`<${React.Fragment}>
+    <${Header} />
+    <main>
+      <${Hero} />
+      <${Brands} />
+      <${Services} />
+      <${Why} />
+      <${Works} />
+      <${Reviews} />
+      <${Booking} />
+    </main>
+    <${Footer} />
+  <//>`;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(html`<${App} />`);
+})();
+</script>
